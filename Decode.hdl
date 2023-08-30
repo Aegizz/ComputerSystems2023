@@ -1,0 +1,60 @@
+// File name: Decode.hdl
+
+/**
+ * The instruction decoder determines the type of instruction (a or c)
+ * and decodes those instructions.
+ * The input in[16] is the instruction to be decoded.
+ * The outputs are used as follows:
+ *   type:      0 if a-instruction, 1 if c-instruction. 
+ *   a:         Determines whether the ALU input uses A (0) or Memory[A] (1)
+ *   c1 .. c6:  Op-code wires to ALU
+ *   d1 d2 d3:  Destination wires to the load pins of A,D registers and Memory
+ *   j1 j2 j3:  Jump wires to Jump Unit
+ * For a-instructions, d1 should be 1, all other outputs should be 0
+ * For c-instructions, outputs should correspond to their bits in the c-instruction
+ */
+
+CHIP Decode {
+
+    IN  in[16];             // instruction to decode
+
+    OUT type,               // Instruction type
+        a,                  // ALU A/M
+        c1,c2,c3,c4,c5,c6,  // Op-code wires to ALU
+        d1,d2,d3,           // Destination wires
+        j1,j2,j3;           // Jump wires
+
+PARTS:
+    // Put your code here:
+    //This is a decode to decode an instruction and supply it to the ALU, the output should result in all zeros if a-instruction (if a =  true, out = false (except d1 bit))
+    //the most significant bit determines the type, an a instruction or a c instruction, if 0, out should be 0 except the d1 bit (6 least signficant bit).
+    
+    //Selector if a, out = false.
+    //Otherwise all bits = relevant bits (the structure just follows the layout below (skip 13, 14 they are unused bits))
+    Mux16(a=false, b=in, sel=in[15], out[0]=j3,out[1]=j2,out[2]=j1,out[3]=d3,out[4]=d2,out[5]=cDestA,out[6]=c6,out[7]=c5,out[8]=c4,out[9]=c3,out[10]=c2,out[11]=c1,out[12]=a, out[15] = type);
+    //Invert the first bit (if a, =1, if c, = 0)
+    Not(in=in[15],out=notA);
+    //If a or d1 true, d1 = 1
+    Or(a=notA, b=cDestA, out=d1);
+    //Therefore all bits correct
+
+    /* Alternative method 
+    And(a=in[15],b=in[15],out=type);
+    And(a=in[15],b=in[12],out=a);
+    And(a=in[15],b=in[11],out=c1);
+    And(a=in[15],b=in[10],out=c2);
+    And(a=in[15],b=in[9],out=c3);
+    And(a=in[15],b=in[8],out=c4);
+    And(a=in[15],b=in[7],out=c5);
+    And(a=in[15],b=in[6],out=c6);
+    Mux(a=true,b=in[5],sel=in[15],out=d1);
+    And(a=in[15],b=in[4],out=d2);
+    And(a=in[15],b=in[3],out=d3);
+    And(a=in[15],b=in[2],out=j1);
+    And(a=in[15],b=in[1],out=j2);
+    And(a=in[15],b=in[0],out=j3);
+    
+    Same proccess just coded differently, is a little easier to read
+    */
+
+}

@@ -1,0 +1,63 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/Memory.hdl
+
+/**
+ * The complete address space of the Hack computer's memory,
+ * including RAM and memory-mapped I/O. 
+
+ * The chip facilitates read and write operations, as follows:
+ *     Read:  out(t) = Memory[address(t)](t)
+ *     Write: if load(t-1) then Memory[address(t-1)](t) = in(t-1)
+ 
+ * In words: the chip always outputs the value stored at the memory 
+ * location specified by address. If load==1, the in value is loaded 
+ * into the memory location specified by address. This value becomes 
+ * available through the out output from the next time step onward.
+ 
+ * Address space rules:
+ * Only the upper 16K+8K+1 words of the Memory chip are used. 
+ * Access to address>0x6000 is invalid. Access to any address in 
+ * the range 0x4000-0x5FFF results in accessing the screen memory 
+ * map. Access to address 0x6000 results in accessing the keyboard 
+ * memory map. The behavior in these addresses is described in the 
+ * Screen and Keyboard chip specifications given in the book.
+ */
+
+CHIP Memory {
+    IN in[16], load, address[15];
+    OUT out[16];
+
+    PARTS:
+    // Put your code here:
+
+    /*Dmux 4 way, in as load. Essentially use the 1st and 2nd most significant bits as 
+    a selector for the part of memory to be modified */
+
+    /* The address space rules above mentions the locations greater than 0x6000 as invalid and 0x4000 -> 0x5FFF as screen memory and 0x6000 as keyboard.
+    Use a Hexidecimal calculator to convert this to binary (remember the address is a 15-bit address).  
+    E.g. 0x4000 = 100 0000 0000 0000, 0x5FFF = 101 1111 1111 1111, 0x6000 = 110 0000 0000 0000*/
+
+    /* Set the output to their relevant bits; since  0x6000 selector bits is 11, last results in a null value accessed, ramA and ramB are the same (hence the or),
+    c is the screen value as 0x4000 - 0x5FFF results in the selector bits 10.*/
+
+    DMux4Way(in=load, sel=address[13..14], a=ramA, b=ramB, c=screenIn, d = null);
+
+
+    //Or the two selectors together as there should only be one (we dont have a 3way Mux)
+    Or(a= ramA, b = ramB, out = ramIn);
+    //Thus we now have 3 values ramIn, screenIn and null. If ramIn is 1, we want to store the in, in memory. If screenIn is 1, we want to store the in, in screen.
+
+    //Store the ram using a ram chip, using the load chip as 0 or 1 depending of the result from the DMux4Way, output this value.
+    RAM16K(in=in, load=ramIn, address=address[0..13], out=ramOut);
+
+    //Store the screen memory into the screen memory
+    Screen(in=in, load=screenIn, address=address[0..12], out=screenOut);
+
+    //Keyboard chip (no clue how it works)
+    Keyboard(out=kdbOut);
+    
+    //Output the correct output depending on the selector input, if there is invalid input use the for memory.
+    Mux4Way16(a=ramOut, b=ramOut, c=screenOut, d=kdbOut, sel=address[13..14], out=out);
+}

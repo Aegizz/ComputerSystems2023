@@ -1,0 +1,48 @@
+// File name: Jump.hdl
+
+/**
+ * The jump unit determines whether the Program Counter should jump.
+ * A jump is performed if any of the j1 j2 j3 bits of the c-instruction 
+ * are true, AND the matching condition is met:
+ *   j1: jump if ALU output is < 0
+ *   j2: jump if ALU output   == 0
+ *   j3: jump if ALU output is > 0
+ * If multiple of these bits are set true, then jump if any of 
+ * those conditions are met,
+ * e.g. if j1 and j2 are both set true, jump if < 0 or == 0 
+ * The ALU output is determined through the zr and ng wires:
+ *   zr: is true when the ALU's output   == 0, false otherwise
+ *   ng: is true when the ALU's output is < 0, false otherwise
+ * If both zr and ng are false, then the ALU's output is > 0
+ */
+
+CHIP Jump {
+
+    IN  j1,             // c-instruction j1
+        j2,             // c-instruction j2
+        j3,             // c-instruction j3
+        zr,             // zr pin from ALU
+        ng;             // ng pin from ALU
+
+    OUT jump;           // true if a jump should be performed, false otherwise 
+
+PARTS:
+    // Put your code here:
+    //This is basic logic, basically if a given condition is true the program should jump given that the jump condition is set to that condition.
+    // So j1 is for a negative output from the ALU. (ng)
+    // So j2 is if the output from the ALU is 0. (zr)
+    // So j3 is if the output is positive (e.g. not ng or zr)
+
+    And(a=j1, b=ng, out=Or1); //And ng and j1 if both true jump
+    And(a=j2, b=zr, out=Or2); //And j2 and zr if both true jump
+
+    Not(in=zr, out=notZr); //Invert zr to 1
+    Not(in = ng, out = notNg); // Invert ng to 1
+    And(a=notNg, b=notZr, out=ps); //If Ng and Zr both false, positive = 1; (ps)
+    And(a=j3, b=ps, out=Or3); //If j3 and ps true, jump
+
+    //Or all the jumps together if any given jump is true, jump
+    Or(a=Or1, b=Or2, out=Or4);
+    Or(a=Or3, b=Or4, out=jump);
+
+}
