@@ -1,0 +1,139 @@
+push static 0
+push constant 0
+eq
+if-goto zero
+push static 1
+push constant 0
+eq
+if-goto zero
+
+label ABS-1
+push static 0
+push constant 0
+lt
+if-goto NEG-1
+push static 0
+pop static 3
+goto ABS-2
+
+label NEG-1
+push static 0
+neg
+pop static 3
+
+
+label ABS-2
+push static 1
+push constant 0
+lt
+if-goto NEG-2
+push static 1
+pop static 4
+goto size-check
+label NEG-2
+push static 1
+neg
+pop static 4
+
+
+label size-check
+push static 3
+push static 4
+lt
+if-goto x_y
+goto y_x
+label x_y
+push static 0
+push constant 0
+lt
+if-goto neg_x_y
+push static 0
+pop static 5
+push static 1
+pop static 6
+goto loop_x_y
+label neg_x_y
+push static 0
+neg
+pop static 5
+push static 1
+neg
+pop static 6
+goto loop_x_y
+label neg_y_x_y
+push static 1
+pop static 6
+goto loop_x_y
+
+label loop_x_y
+push static 6
+push static 7
+add
+pop static 7
+push static 5
+push constant 1
+sub
+pop static 5
+push static 5
+push constant 1
+lt
+if-goto before-end
+goto loop_x_y
+
+
+
+
+label y_x
+push static 1
+push constant 0
+lt
+if-goto neg_y_x
+push static 0
+pop static 5
+push static 1
+pop static 6
+goto loop_y_x
+label neg_y_x
+push static 1
+neg
+pop static 6
+push static 0
+neg
+pop static 5
+goto loop_y_x
+label neg_x_y_x
+push static 0
+pop static 5
+goto loop_y_x
+label loop_y_x
+push static 5
+push static 7
+add
+pop static 7
+push static 6
+push constant 1
+sub
+pop static 6
+push static 6
+push constant 1
+lt
+if-goto before-end
+goto loop_y_x
+
+
+label before-end
+push static 7
+pop local 0
+goto END
+
+label zero
+push constant 0
+pop local 0
+goto END
+label before-end
+push static 7
+pop local 0
+goto END
+
+label END
+goto END
